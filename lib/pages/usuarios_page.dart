@@ -80,12 +80,15 @@ class _UsuariosPageState extends State<UsuariosPage> {
             complete: Icon(Icons.check, color: Colors.blue[400]),
             waterDropColor: Colors.blue[200],
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: <Widget>[
-              _listViewUsers(size), 
-              _listChats(size)
-            ],
+          child: Container(
+            margin: EdgeInsets.all(5),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: <Widget>[
+                _listViewUsers(size), 
+                _listChats(size)
+              ],
+            ),
           ),
         ));
   }
