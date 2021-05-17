@@ -1,5 +1,7 @@
+import 'package:chat/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:chat/models/usuario.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -23,21 +25,15 @@ class _UsuariosPageState extends State<UsuariosPage> {
         uid: '4', nombre: 'Papá', email: 'salvador@josmii.com', online: true, avatarUrl: 'assets/svg/009-boy-4.svg'),
     Usuario(
         uid: '4', nombre: 'Papá', email: 'salvador@josmii.com', online: true, avatarUrl: 'assets/svg/009-boy-4.svg'),
-    Usuario(
-        uid: '4', nombre: 'Papá', email: 'salvador@josmii.com', online: true, avatarUrl: 'assets/svg/009-boy-4.svg'),
-    Usuario(
-        uid: '4', nombre: 'Papá', email: 'salvador@josmii.com', online: true, avatarUrl: 'assets/svg/009-boy-4.svg'),
-    Usuario(
-        uid: '4', nombre: 'Papá', email: 'salvador@josmii.com', online: true, avatarUrl: 'assets/svg/009-boy-4.svg'),
-    Usuario(
-        uid: '4', nombre: 'Papá', email: 'salvador@josmii.com', online: true, avatarUrl: 'assets/svg/009-boy-4.svg'),
-    Usuario(
-        uid: '4', nombre: 'Papá', email: 'salvador@josmii.com', online: true, avatarUrl: 'assets/svg/009-boy-4.svg'),
   ];
 
   @override
   Widget build(BuildContext context) {
+
     final size = MediaQuery.of(context).size;
+    final authService = Provider.of<AuthService>(context);
+
+    final usuario = authService.usuario;
 
     return Scaffold(
         backgroundColor: Colors.grey.shade200,
@@ -45,9 +41,9 @@ class _UsuariosPageState extends State<UsuariosPage> {
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text('Good morning',
+              Text('Buenos dias',
                   style: TextStyle(color: Colors.black54, fontSize: 15.0)),
-              Text('Josmar Salvador',
+              Text('${usuario.nombre}',
                   style: TextStyle(color: Colors.black87, fontSize: 17.0)),
             ],
           ),
@@ -70,6 +66,17 @@ class _UsuariosPageState extends State<UsuariosPage> {
               margin: EdgeInsets.only(right: 10),
               child: Icon(Icons.check_circle, color: Colors.blue.shade200),
             ),
+            Container(
+              margin: EdgeInsets.only(right: 10),
+              child: GestureDetector(
+                child: Icon(Icons.exit_to_app, color: Colors.black87),
+                onTap: (){
+                  //TODO: Desconectar el socket server
+                  Navigator.pushReplacementNamed(context, 'login');
+                  AuthService.deleteToken();
+                },
+              )
+            )
           ],
         ),
         body: SmartRefresher(
