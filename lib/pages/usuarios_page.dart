@@ -1,9 +1,12 @@
-import 'package:chat/services/auth_service.dart';
+import 'package:chat/services/chat_service.dart';
+import 'package:chat/services/usuarios_service.dart';
 import 'package:flutter/material.dart';
-import 'package:chat/models/usuario.dart';
-import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:chat/services/auth_service.dart';
+import 'package:chat/services/socket_service.dart';
+import 'package:chat/models/usuario.dart';
+import 'package:provider/provider.dart';
 
 class UsuariosPage extends StatefulWidget {
   @override
@@ -11,27 +14,27 @@ class UsuariosPage extends StatefulWidget {
 }
 
 class _UsuariosPageState extends State<UsuariosPage> {
+
+  final usuarioService = new UsuariosService();
+
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
+  
+  List<Usuario> usuarios = [];
 
-  final usuarios = [
-    Usuario(
-        uid: '1', nombre: 'Monica', email: 'monica@josmii.com', online: true, avatarUrl: 'assets/svg/002-girl.svg'),
-    Usuario(
-        uid: '2', nombre: 'Gladis', email: 'gladis@josmii.com', online: false, avatarUrl: 'assets/svg/003-girl-1.svg'),
-    Usuario(
-        uid: '3', nombre: 'Naty', email: 'naty@josmii.com', online: true, avatarUrl: 'assets/svg/005-girl-2.svg'),
-    Usuario(
-        uid: '4', nombre: 'Papá', email: 'salvador@josmii.com', online: true, avatarUrl: 'assets/svg/009-boy-4.svg'),
-    Usuario(
-        uid: '4', nombre: 'Papá', email: 'salvador@josmii.com', online: true, avatarUrl: 'assets/svg/009-boy-4.svg'),
-  ];
+
+  @override
+  void initState() {
+    this._cargarUsuarios();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
 
     final size = MediaQuery.of(context).size;
     final authService = Provider.of<AuthService>(context);
+    final socketService = Provider.of<SocketService>(context);
 
     final usuario = authService.usuario;
 
@@ -41,7 +44,7 @@ class _UsuariosPageState extends State<UsuariosPage> {
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text('Buenos dias',
+              Text('Hola de nuevo',
                   style: TextStyle(color: Colors.black54, fontSize: 15.0)),
               Text('${usuario.nombre}',
                   style: TextStyle(color: Colors.black87, fontSize: 17.0)),
@@ -57,21 +60,23 @@ class _UsuariosPageState extends State<UsuariosPage> {
                 color: Colors.blue.shade200,
                 borderRadius: BorderRadius.circular(50)),
             child: Center(
-                child: Text('JS',
+                child: Text( usuario.nombre.substring(0,2),
                     style: TextStyle(
                         color: Colors.white, fontWeight: FontWeight.w600))),
           ),
           actions: <Widget>[
             Container(
               margin: EdgeInsets.only(right: 10),
-              child: Icon(Icons.check_circle, color: Colors.blue.shade200),
+              child: ( socketService.serverStatus == ServerStatus.Online )
+                      ? Icon( Icons.check_circle, color: Colors.blue)
+                      : Icon( Icons.offline_bolt, color: Colors.red)
             ),
             Container(
               margin: EdgeInsets.only(right: 10),
               child: GestureDetector(
                 child: Icon(Icons.exit_to_app, color: Colors.black87),
                 onTap: (){
-                  //TODO: Desconectar el socket server
+                  socketService.disconnect();
                   Navigator.pushReplacementNamed(context, 'login');
                   AuthService.deleteToken();
                 },
@@ -148,7 +153,10 @@ class _UsuariosPageState extends State<UsuariosPage> {
                     backgroundColor: usuarios[i].online ? Colors.blue.shade200 : Colors.grey.shade400,
                     child: SvgPicture.asset(usuarios[i].avatarUrl)
                   ),
-                  Text( usuarios[i].nombre, overflow: TextOverflow.ellipsis, style: TextStyle( fontWeight: FontWeight.w500, ),)
+                  Padding(
+                    padding: const EdgeInsets.symmetric( horizontal: 5 ),
+                    child: Text( usuarios[i].nombre, overflow: TextOverflow.ellipsis, style: TextStyle( fontWeight: FontWeight.w500, ),),
+                  )
 
                 ],
               )
@@ -191,10 +199,18 @@ class _UsuariosPageState extends State<UsuariosPage> {
             color: usuario.online ? Colors.green[300] : Colors.grey,
             borderRadius: BorderRadius.circular(100)),
       ),
+      onTap: () {
+        final chatService = Provider.of<ChatService>(context, listen: false);
+        chatService.usuarioPara = usuario;
+        Navigator.pushNamed(context, 'chat');
+      },
     );
   }
 
   _cargarUsuarios() async {
+
+    this.usuarios = await usuarioService.getUsuarios();
+    setState(() {});
     // monitor network fetch
     await Future.delayed(Duration(milliseconds: 1000));
 
